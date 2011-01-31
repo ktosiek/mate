@@ -17,10 +17,16 @@ class BierzGo(MateModule):
         self.regex = u'(?i)' + mate.conf['nick']
 
     def run(self, mate, nick, msg):
-        if 'bierz go' in msg and self.last_nick != None:
-            mate.say(self.last_nick + ': hssss!')
+        if 'bierz go' in msg:
+            if self.last_nick == None:
+                mate.say(nick + ': hssss!')
+            else:
+                mate.say(self.last_nick + ': hssss!')
         else:
-            self.last_nick = nick
+            if nick == mate.conf['owner']:
+                self.last_nick = None
+            else:
+                self.last_nick = nick
 
 if __name__ == '__main__': 
    print __doc__.strip()

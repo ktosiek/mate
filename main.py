@@ -8,6 +8,7 @@ config = { 'server': 'hake5.selfip.net',
            'realname': 'Pyton; owner: tomekk',
            'ssl': True,
            'channels': ['#bot'],
+           'owner': ['tomekk'],
            }
 
 if __name__ == '__main__':
