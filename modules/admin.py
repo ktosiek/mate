@@ -1,22 +1,19 @@
 # -*- coding: utf-8 -*-
 from mate import MateModule
 
-__module_class_names__ = ["Reload", "IrcCmd"]
+__module_class_names__ = ["Reload", "IrcCmd", "JoinPart"]
 __module_config__ = { 'admins': (['tomekk'],
                                  list,
                                  """ List of administrators """),
                       }
 
-def admins_only():
-    def decorate(f):
-        def run(module, mate, nick, msg):
-            if not nick in self.conf['admins']:
-                mate.say('sorry %s, I don\'t think I can do that' % nick)
-            else:
-                return f(module, mate, nick, msg)
-        return run
-    return decorate
-
+def admins_only(f):
+    def run(module, mate, nick, msg):
+        if not nick in module.conf['admins']:
+            mate.say('sorry %s, I don\'t think I can do that' % nick)
+        else:
+            return f(module, mate, nick, msg)
+    return run
 
 class Reload(MateModule):
     def __init__(self, mate, config):
@@ -85,3 +82,13 @@ class IrcCmd(MateModule):
 
         print 'IrcCmd: %s: %s' % ( cmd, full_cmd )
         mate.irc.cmd(full_cmd)
+
+class JoinPart(MateModule):
+    def __init__(self, mate, config):
+        MateModule.__init__(self, mate, config)
+        self.regex = u'^' + mate.conf['nick'] + ': (join|part) ([^ ]+) *$'
+
+    @admins_only
+    def run(self, mate, nick, msg):
+        print mate.match
+        mate.irc.cmd( [ mate.match[0].upper(), mate.match[1] ] )

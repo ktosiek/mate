@@ -187,12 +187,18 @@ class Mate(object):
 
     def unload_module(self, pack_name, module_names=None):
         print '%s/%s' % (pack_name, module_names)
-        modules = filter(lambda m: m[0] == pack_name and (module_names == None or m[2].__class__.__name__ in module_names),
-                         self.modules)
-        for m in modules:
-            print 'Unloading %s.%s' % (m[0], m[2])
-            m[2].unload()
+        
+        remove_me = []
+        for m in self.modules:
+            if m[0] == pack_name:
+                if (module_names == None) or (m[2].__class__.__name__ in module_names):
+                    print m
+                    remove_me.append( m )
+
+        for m in remove_me:
             self.modules.remove(m)
+            m[2].unload()
+            print 'Unloading %s.%s' % (m[0], m[2])
 
     def prepare_module_config(self, config):
         prepared = {}
@@ -205,7 +211,7 @@ class Mate(object):
         return prepared
 
     def set_config(self, conf):
-        essentials = ('server', 'port', 'nick', 'realname')
+        essentials = ('server', 'port', 'nick', 'realname', 'owner')
         defaults = (('password', None),
                     ('ssl', False),
                     ('encoding', 'utf8'),

@@ -8,7 +8,7 @@ import re
 class Title(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = u'(https?://([a-zA-Z0-9]+\.)+[a-zA-Z]{2,3}(/[^ ]*)*)'
+        self.regex = u'(https?://([a-zA-Z0-9]+\.)+[a-zA-Z]{2,3}(:[0-9]+)?(/[^ ]*)*)'
         self.conf['threadable'] = True
         self.conf['thread_timeout'] = 10.0
 
@@ -28,7 +28,7 @@ class Title(MateModule):
     def check_title(self, url, mate):
         print '===URL: %s' % url
         f = urllib2.urlopen( url, None, 8.0 )
-        buf = f.read(4096)
-        title = re.findall('<title>(.*)</title>', buf)
+        buf = f.read(4096).decode('utf8')
+        title = re.findall('(?mi)<title>(.*)</title>', buf.replace('\n','').replace('\r',''))
         if len(title) > 0:
             mate.say( url + ': ' + title[0] )

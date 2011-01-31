@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-__module_class_names__ = ["Slowpoke"]
+__module_class_names__ = ["Dobranoc"]
 
 from mate import MateModule, run_per_minute, noop
 import time
 
-class Slowpoke(MateModule):
+class Dobranoc(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
         self.regex = '(?i)((^| |do|\')branoc|goodnight|(^| )g\'n( |$))'
