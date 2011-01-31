@@ -28,7 +28,11 @@ class Title(MateModule):
     def check_title(self, url, mate):
         print '===URL: %s' % url
         f = urllib2.urlopen( url, None, 8.0 )
-        buf = f.read(4096).decode('utf8')
+        buf = f.read(4096)
+        try:
+            buf = buf.decode('utf8')
+        except UnicodeDecodeError:
+            buf = buf.decode('ascii', 'replace')
         title = re.findall('(?mi)<title>(.*)</title>', buf.replace('\n','').replace('\r',''))
         if len(title) > 0:
             mate.say( url + ': ' + title[0] )
