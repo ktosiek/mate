@@ -102,6 +102,7 @@ class Mate(object):
                            encoding = self.conf['encoding'] )
 
         self.irc.handlers['PRIVMSG'] = self.irc_privmsg_handler
+        self.irc.handlers['KICK'] = self.irc_kick_handler
         self.modules = [] # lista krotek (nazwa_zestawu_modułów, skompilowany regexp, moduł)
         self.load_modules()
 
@@ -137,6 +138,10 @@ class Mate(object):
                                                         (m[0],
                                                          m[2].__class__.__name__,
                                                          str(e).replace('\n', '|')) )
+
+    def irc_kick_handler(self, irc, prefix, command, params):
+        if self.conf['autorejoin']:
+            self.irc.cmd(['JOIN', params[0]])
 
     def msg( self, room, msg ):
         self.irc.msg(room, msg)
@@ -217,7 +222,8 @@ class Mate(object):
                     ('encoding', 'utf8'),
                     ('module_paths', ['modules/']),
                     ('module_blacklist', []),
-                    ('channels', []),)
+                    ('channels', []),
+                    ('autorejoin', True),)
 
         self.conf = {}
 

@@ -9,6 +9,7 @@ config = { 'server': 'hake5.selfip.net',
            'ssl': True,
            'channels': ['#bot'],
            'owner': ['tomekk'],
+           'module_blacklist': ['slowpoke'],
            }
 
 if __name__ == '__main__':
