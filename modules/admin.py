@@ -7,20 +7,29 @@ __module_config__ = { 'admins': (['tomekk'],
                                  """ List of administrators """),
                       }
 
+def admins_only():
+    def decorate(f):
+        def run(module, mate, nick, msg):
+            if not nick in self.conf['admins']:
+                mate.say('sorry %s, I don\'t think I can do that' % nick)
+            else:
+                return f(module, mate, nick, msg)
+        return run
+    return decorate
+
+
 class Reload(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
         self.regex = mate.conf['nick'] + u': (reload|unload) ([a-zA-Z0-9_]*)(( ([a-zA-Z0-9]+))*)'
 
+    @admins_only
     def run(self, mate, nick, msg):
         """
         mate: instancja Mate
         nick: nick osoby której wypowiedź pasowała
         msg: dopasowana wiadomość
         """
-        if not nick in self.conf['admins']:
-            mate.say('sorry %s, I don\'t think I can do that' % nick)
-            return
 
         print mate.match
 
@@ -49,6 +58,7 @@ class IrcCmd(MateModule):
         MateModule.__init__(self, mate, config)
         self.regex = mate.conf['nick'] + u': (irccmd|ctcp) (.*)'
 
+    @admins_only
     def run(self, mate, nick, msg):
         if not nick in self.conf['admins']:
             mate.say('sorry %s, I don\'t think I can do that' % nick)

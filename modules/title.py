@@ -32,4 +32,3 @@ class Title(MateModule):
         title = re.findall('<title>(.*)</title>', buf)
         if len(title) > 0:
             mate.say( url + ': ' + title[0] )
-

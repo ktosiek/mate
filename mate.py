@@ -7,6 +7,8 @@ import pkgutil
 import re
 import asyncore
 import traceback
+from threading import Timer
+from threading2 import Thread
 
 class ClassWrapper(object):
     def __init__(self, origobj):
@@ -39,11 +41,39 @@ def run_per_minute(max_runs_per_m, run_if_too_often):
         return run
     return decorate
 
+def run_in_background(timeout=None):
+    def decorate(f):
+        def run(*args, **kwargs):
+            timer = False
+            def f_and_timer(*args, **kwargs):
+                f(*args, **kwargs)
+                timer and timer.cancel()
+
+            print 'starting bg thread with timeout %s' % timeout
+            thread = Thread( target = f_and_timer, args=args, kwargs=kwargs )
+
+            def stop():
+                print 'stopping thread %s' % thread
+                thread.terminate()
+
+            if timeout != None:
+                timer = Timer(timeout, stop)
+                timer.start()
+
+            thread.start()
+            return thread
+            
+        return run
+    return decorate
+
 class MateModule(object):
     regex = None
 
     def __init__(self, mate, config):
         self.conf=config
+        self.conf['threadable'] = config.get('threadable', False)
+        if self.conf['threadable']:
+            self.conf['thread_timeout'] = config.get('thread_timeout', 5.0)
 
     def run(self, mate, nick, msg):
         """
@@ -87,17 +117,21 @@ class Mate(object):
 
     def irc_privmsg_handler(self, irc, prefix, command, params):
         for m in self.modules:
-            match = m[1].match( params[-1] )
-            if match != None:
+            all_matches = m[1].findall( params[-1] )
+            if len(all_matches) > 0:
                 try:
                     nick = prefix.split('!')[0]
                     msg = params[-1]
                     mate = ClassWrapper( self )
                     mate.say = self.gen_say_func( params[0] )
                     mate.reply = self.gen_reply_func( params[0], nick )
-                    mate.match = match
+                    mate.match = all_matches[0]
+                    mate.all_matches = all_matches
                     
-                    m[2].run( mate, nick, msg )
+                    if m[2].conf['threadable']:
+                        run_in_background( m[2].conf['thread_timeout'] )(m[2].run)( mate, nick, msg )
+                    else:
+                        m[2].run( mate, nick, msg )
                 except BaseException as e:
                     self.gen_say_func( params[0] )( '%s:%s: %s' % \
                                                         (m[0],
@@ -151,8 +185,9 @@ class Mate(object):
                 print 'Can\'t load %s:\n%s' % (name, e)
                 traceback.print_exc()
 
-    def unload_module(self, pack_name, module_name=None):
-        modules = filter(lambda m: m[0] == pack_name and (module_name == None or m[2].__class__.__name__ == module_name),
+    def unload_module(self, pack_name, module_names=None):
+        print '%s/%s' % (pack_name, module_names)
+        modules = filter(lambda m: m[0] == pack_name and (module_names == None or m[2].__class__.__name__ in module_names),
                          self.modules)
         for m in modules:
             print 'Unloading %s.%s' % (m[0], m[2])
