@@ -10,7 +10,7 @@ __module_config__ = { 'admins': (['tomekk'],
 class Reload(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = mate.conf['nick'] + u': (reload|unload) ([a-zA-Z0-9_]*)( ([a-zA-Z0-9]+))*'
+        self.regex = mate.conf['nick'] + u': (reload|unload) ([a-zA-Z0-9_]*)(( ([a-zA-Z0-9]+))*)'
 
     def run(self, mate, nick, msg):
         """
@@ -22,9 +22,14 @@ class Reload(MateModule):
             mate.say('sorry %s, I don\'t think I can do that' % nick)
             return
 
-        action = mate.match.group(1)
-        pack_name = mate.match.group(2)
-        modules = mate.match.group(4)
+        print mate.match
+
+        action = mate.match[0]
+        pack_name = mate.match[1]
+        modules = mate.match[2].split(' ')[1:]
+        if len(modules) == 0:
+            modules = None
+
         if action == 'reload':
             action_str = u'Reloading %s'
         elif action == 'unload':
@@ -50,13 +55,22 @@ class IrcCmd(MateModule):
             return
 
         print 'irccmd'
-        args = mate.match.groups()
+        args = mate.match
         cmd = args[0]
         params = args[1].split(' ')
 
-        if cmd == 'irccmd':
-            full_cmd = params
-        elif cmd == 'ctcp':
+        print str(mate.match)
+
+        if cmd == u'irccmd':
+            n=0
+            for s in params:
+                if s.startswith(':'):
+                    break
+                n+=1
+
+            full_cmd = params[:n] + [' '.join(params[n:])[1:]]
+            print full_cmd
+        elif cmd == u'ctcp':
             full_cmd = ['PRIVMSG', params[0], u'' + chr(1) + ' '.join(params[1:]) + chr(1)]
 
         print 'IrcCmd: %s: %s' % ( cmd, full_cmd )

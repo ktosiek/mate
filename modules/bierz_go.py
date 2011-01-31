@@ -14,7 +14,7 @@ class BierzGo(MateModule):
         MateModule.__init__(self, mate, config)
         self.last_nick = None
 
-        self.regex = r'.*'+mate.conf['nick']+'.*'
+        self.regex = u'(?i)' + mate.conf['nick']
 
     def run(self, mate, nick, msg):
         if 'bierz go' in msg and self.last_nick != None:

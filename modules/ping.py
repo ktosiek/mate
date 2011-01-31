@@ -10,9 +10,9 @@ class Hello(MateModule):
 
     def run(self, mate, nick, msg):
         if nick == 'Grazyna':
-            mate.say( mate.match.group(1) + nick + mate.match.group(3) )
+            mate.say( mate.match[0] + nick + mate.match[2] )
         else:
-            mate.say( 'sssSSSSss ' + nick + mate.match.group(3) )
+            mate.say( 'sssSSSSss ' + nick + mate.match[2] )
 
 class Party(MateModule):
     def __init__(self, mate, config):
