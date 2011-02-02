@@ -4,6 +4,13 @@ __module_class_names__ = ["Title"]
 from mate import MateModule, run_per_minute, run_in_background, noop
 import urllib2
 import re
+import htmllib
+
+def unescape(s):
+    p = htmllib.HTMLParser(None)
+    p.save_bgn()
+    p.feed(s)
+    return p.save_end()
 
 class Title(MateModule):
     def __init__(self, mate, config):
@@ -28,9 +35,14 @@ class Title(MateModule):
         f = urllib2.urlopen( url, None, 8.0 )
         buf = f.read(4096)
         try:
-            buf = buf.decode('utf8')
-        except UnicodeDecodeError:
+            encoding = 'utf8'
+            encoding = re.findall( '<meta http-equiv="Content-Type" content="text/html; charset=([a-zA-Z0-9-]*)">',
+                                   buf )[0].lower()
+            if encoding == 'utf-8':
+                encoding = 'utf8'
+            buf = buf.decode( encoding )
+        except (UnicodeDecodeError, IndexError):
             buf = buf.decode('ascii', 'replace')
         title = re.findall('(?mi)<title>(.*)</title>', buf.replace('\n','').replace('\r',''))
         if len(title) > 0:
-            mate.say( url + ': ' + title[0] )
+            mate.say( url + ': ' + unescape(title[0]) )
