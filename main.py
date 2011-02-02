@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from mate import *
+import logging
 
 config = { 'server': 'hake5.selfip.net',
            'port': 6660,
@@ -13,6 +14,7 @@ config = { 'server': 'hake5.selfip.net',
            }
 
 if __name__ == '__main__':
+    logging.basicConfig(filename = '/home/tomek/.mate/log', level=logging.DEBUG)
 
     mate = Mate(config)
     mate.main()

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from future_builtins import map, filter
 
+import logging
 import time
 import irc
 import pkgutil
@@ -9,6 +10,8 @@ import asyncore
 import traceback
 from threading import Timer
 from threading2 import Thread
+
+log = logging.getLogger('Mate')
 
 class ClassWrapper(object):
     def __init__(self, origobj):
@@ -49,11 +52,11 @@ def run_in_background(timeout=None):
                 f(*args, **kwargs)
                 timer and timer.cancel()
 
-            print 'starting bg thread with timeout %s' % timeout
+            log.debug( 'starting bg thread with timeout %s', timeout )
             thread = Thread( target = f_and_timer, args=args, kwargs=kwargs )
 
             def stop():
-                print 'stopping thread %s' % thread
+                log.debug( 'stopping thread %s', thread )
                 thread.terminate()
 
             if timeout != None:
@@ -117,17 +120,22 @@ class Mate(object):
         return reply
 
     def irc_privmsg_handler(self, irc, prefix, command, params):
+        nick = prefix.split('!')[0]
+        msg = params[-1]
+        channel = params[0]
+        mate = ClassWrapper( self )
+        mate.say = self.gen_say_func( channel )
+        mate.reply = self.gen_reply_func( channel, nick )
+
+        log.info( '%s|< %s>%s', channel, nick, msg)
         for m in self.modules:
             all_matches = m[1].findall( params[-1] )
             if len(all_matches) > 0:
                 try:
-                    nick = prefix.split('!')[0]
-                    msg = params[-1]
-                    mate = ClassWrapper( self )
-                    mate.say = self.gen_say_func( params[0] )
-                    mate.reply = self.gen_reply_func( params[0], nick )
                     mate.match = all_matches[0]
                     mate.all_matches = all_matches
+
+                    log.debug( '%s: %s', m[2].__class__.__name__, all_matches )
                     
                     if m[2].conf['threadable']:
                         run_in_background( m[2].conf['thread_timeout'] )(m[2].run)( mate, nick, msg )
@@ -138,12 +146,14 @@ class Mate(object):
                                                         (m[0],
                                                          m[2].__class__.__name__,
                                                          str(e).replace('\n', '|')) )
+                    log.debug( 'Exception: ', exc_info=1 )
 
     def irc_kick_handler(self, irc, prefix, command, params):
         if self.conf['autorejoin']:
             self.irc.cmd(['JOIN', params[0]])
 
     def msg( self, room, msg ):
+        log.info( '%s|<> %s', room, msg )
         self.irc.msg(room, msg)
 
     def main(self):
@@ -158,27 +168,28 @@ class Mate(object):
                 try:
                     self.load_module_with_importer(importer, name)
                 except BaseException as e:
-                    print 'Can\'t load %s:\n%s' % (name, e)
+                    log.error( 'Can\'t load %s', name, e )
+                    log.debug( 'Exception:', exc_info=1 )
 
     def load_module_with_importer(self, importer, pack_name, load_modules=None):
-        print 'Loading modules from %s' % pack_name
+        log.info('Loading modules from %s', pack_name)
         loader = importer.find_module( pack_name )
         module_pack = loader.load_module( pack_name )
         module_names = module_pack.__module_class_names__
-        print '  %s' % ', '.join(module_names)
+        log.info('  %s', ', '.join(module_names))
         for module_name in module_names:
             if load_modules == None or module_name in load_modules:
                 module = getattr(module_pack, module_name)
                 try:
-                    print '    %s' % module
+                    log.debug('    %s', module)
                     obj = module(self, self.prepare_module_config( getattr(module_pack, '__module_config__', {})))
                     if obj:
                         m = (pack_name, re.compile(obj.regex), obj)
                         self.modules.append( m )
-                        print '       %s' % m[2].regex
+                        log.debug( '       %s', m[2].regex )
                 except BaseException as e:
-                    print 'Can\'t load %s from %s:\n%s\n' % (module_name, pack_name, e)
-                    traceback.print_exc()
+                    log.error( 'Can\'t load %s from %s', module_name, pack_name, e)
+                    log.debug( 'Exception: ', exc_info=1)
 
     def load_module(self, pack_name, load_modules=None):
         modules = filter( lambda m: m[1] == pack_name,
@@ -187,23 +198,22 @@ class Mate(object):
             try:
                 self.load_module_with_importer(importer, name, load_modules=load_modules)
             except BaseException as e:
-                print 'Can\'t load %s:\n%s' % (name, e)
-                traceback.print_exc()
+                log.error( 'Can\'t load %s:\n%s', name, e )
+                log.debug( 'Exception: ', exc_info=1 )
 
     def unload_module(self, pack_name, module_names=None):
-        print '%s/%s' % (pack_name, module_names)
+        log.info( 'Trying to unload %s from %s', ', '.join(module_names or []), pack_name )
         
         remove_me = []
         for m in self.modules:
             if m[0] == pack_name:
                 if (module_names == None) or (m[2].__class__.__name__ in module_names):
-                    print m
                     remove_me.append( m )
 
         for m in remove_me:
             self.modules.remove(m)
             m[2].unload()
-            print 'Unloading %s.%s' % (m[0], m[2])
+            log.info( 'Unloading %s.%s', m[0], m[2] )
 
     def prepare_module_config(self, config):
         prepared = {}

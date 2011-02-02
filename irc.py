@@ -1,9 +1,13 @@
 from future_builtins import map, filter
 
+import logging
+
 import asynchat
 import socket
 import ssl
 import re
+
+log = logging.getLogger('IRC')
 
 class IRC(asynchat.async_chat):
     reply_names = { '001': 'RPL_WELCOME',
@@ -93,7 +97,7 @@ class IRC(asynchat.async_chat):
         self.ibuffer = []
 
     def unhandled_reply_warning(self, prefix, command, params):
-            print 'UNHANDLED REPLY:' + unicode(prefix) + ' ' + unicode(command) + ' ' + unicode(params)
+            log.debug( 'unhandled:' + unicode(prefix) + ' ' + unicode(command) + ' ' + unicode(params) )
 
     def msg(self, chan, msg):
         self.cmd(['PRIVMSG', chan, msg])
@@ -101,6 +105,8 @@ class IRC(asynchat.async_chat):
     def cmd(self, msg):
         message = ' '.join( list(map(lambda s: unicode(s).replace(' ',''), msg[:-1]))
                             + [u':' + unicode(msg[-1])] )
+
+        log.debug('%s', message)
 
         message += "\r\n"
 

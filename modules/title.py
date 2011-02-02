@@ -14,7 +14,6 @@ class Title(MateModule):
 
     @run_per_minute(30, noop)
     def run(self, mate, nick, msg):
-        print mate.all_matches
         threads = []
         for url in [ m[0] for m in mate.all_matches ]:
             #threads += self.check_title( url, mate )
@@ -26,7 +25,6 @@ class Title(MateModule):
 
     @run_in_background(10.0)
     def check_title(self, url, mate):
-        print '===URL: %s' % url
         f = urllib2.urlopen( url, None, 8.0 )
         buf = f.read(4096)
         try:
