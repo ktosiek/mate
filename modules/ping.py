@@ -6,7 +6,7 @@ from mate import MateModule, run_per_minute, noop
 class Hello(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = u'(?i)((hi|hello|hey|cześć|czesc|joł|jol|yo|omg)? *)' + mate.conf['nick'] + '(!*)$'
+        self.regex = u'(?i)((hi|hello|hey|cześć|czesc|joł|jol|yo|omg)? *)' + mate.conf['nick'] + '([!?]*)$'
 
     def run(self, mate, nick, msg):
         if nick == 'Grazyna':
