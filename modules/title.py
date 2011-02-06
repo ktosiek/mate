@@ -45,4 +45,4 @@ class Title(MateModule):
             buf = buf.decode('ascii', 'replace')
         title = re.findall('(?mi)<title>(.*)</title>', buf.replace('\n','').replace('\r',''))
         if len(title) > 0:
-            mate.say( url + ': ' + unescape(title[0]) )
+            mate.say( url + '  => ' + unescape(title[0]) )
