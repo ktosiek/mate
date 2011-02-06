@@ -14,7 +14,8 @@ config = { 'server': 'hake5.selfip.net',
            }
 
 if __name__ == '__main__':
-    logging.basicConfig(filename = '/home/tomek/.mate/log', level=logging.DEBUG)
+    logging.basicConfig(filename = '/home/tomek/.mate/log', level=logging.DEBUG, \
+                        format="%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s")
 
     mate = Mate(config)
     mate.main()

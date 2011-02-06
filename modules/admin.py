@@ -70,7 +70,7 @@ class IrcCmd(MateModule):
         elif cmd == u'ctcp':
             full_cmd = ['PRIVMSG', params[0], u'' + chr(1) + ' '.join(params[1:]) + chr(1)]
 
-        log.info('|' + full_cmd)
+        log.info('|' + str(full_cmd))
         mate.irc.cmd(full_cmd)
 
 class JoinPart(MateModule):
