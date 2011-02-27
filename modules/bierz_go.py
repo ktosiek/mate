@@ -14,7 +14,7 @@ class BierzGo(MateModule):
         MateModule.__init__(self, mate, config)
         self.last_nick = None
 
-        self.regex = u'(?i)' + mate.conf['nick']
+        self.regex = '(?i)' + mate.conf['nick']
 
     def run(self, mate, nick, msg):
         if 'bierz go' in msg:
@@ -29,4 +29,4 @@ class BierzGo(MateModule):
                 self.last_nick = nick
 
 if __name__ == '__main__': 
-   print __doc__.strip()
+   print(__doc__.strip())

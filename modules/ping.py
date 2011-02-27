@@ -6,7 +6,7 @@ from mate import MateModule, run_per_minute, noop
 class Hello(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = u'(?i)((hi|hello|hey|cześć|czesc|joł|jol|yo|omg)? *)' + mate.conf['nick'] + '([!?]*)$'
+        self.regex = '(?i)((hi|hello|hey|cześć|czesc|joł|jol|yo|omg)? *)' + mate.conf['nick'] + '([!?]*)$'
 
     def run(self, mate, nick, msg):
         if nick == 'Grazyna':
@@ -17,7 +17,7 @@ class Hello(MateModule):
 class Party(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = u'(?i).*party.*'
+        self.regex = '(?i).*party.*'
 
     def run(self, mate, nick, msg):
         mate.say( 'Party! Party! Party!' )

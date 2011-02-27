@@ -12,7 +12,7 @@ responses = { 'aiaiai': ['I am your butterfly', 'I need your protection', 'be my
 class Ninja(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = u'(?i)('+ '|'.join( responses.keys() ) + ')'
+        self.regex = '(?i)('+ '|'.join( list(responses.keys()) ) + ')'
 
     @run_in_background()
     def run(self, mate, nick, msg):

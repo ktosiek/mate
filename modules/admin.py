@@ -21,7 +21,7 @@ def admins_only(f):
 class Reload(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = mate.conf['nick'] + u': (reload|unload) ([a-zA-Z0-9_]*)(( ([a-zA-Z0-9]+))*)'
+        self.regex = mate.conf['nick'] + ': (reload|unload) ([a-zA-Z0-9_]*)(( ([a-zA-Z0-9]+))*)'
 
     @admins_only
     def run(self, mate, nick, msg):
@@ -47,7 +47,7 @@ class Reload(MateModule):
 class IrcCmd(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = mate.conf['nick'] + u': (irccmd|ctcp) (.*)'
+        self.regex = mate.conf['nick'] + ': (irccmd|ctcp) (.*)'
 
     @admins_only
     def run(self, mate, nick, msg):
@@ -59,7 +59,7 @@ class IrcCmd(MateModule):
         cmd = args[0]
         params = args[1].split(' ')
 
-        if cmd == u'irccmd':
+        if cmd == 'irccmd':
             n=0
             for s in params:
                 if s.startswith(':'):
@@ -67,8 +67,8 @@ class IrcCmd(MateModule):
                 n+=1
 
             full_cmd = params[:n] + [' '.join(params[n:])[1:]]
-        elif cmd == u'ctcp':
-            full_cmd = ['PRIVMSG', params[0], u'' + chr(1) + ' '.join(params[1:]) + chr(1)]
+        elif cmd == 'ctcp':
+            full_cmd = ['PRIVMSG', params[0], '' + chr(1) + ' '.join(params[1:]) + chr(1)]
 
         log.info('|' + str(full_cmd))
         mate.irc.cmd(full_cmd)
@@ -76,7 +76,7 @@ class IrcCmd(MateModule):
 class JoinPart(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = u'^' + mate.conf['nick'] + ': (join|part) ([^ ]+) *$'
+        self.regex = '^' + mate.conf['nick'] + ': (join|part) ([^ ]+) *$'
 
     @admins_only
     def run(self, mate, nick, msg):
@@ -89,7 +89,7 @@ class JoinPart(MateModule):
 class Say(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = u'^' + mate.conf['nick'] + ': say ([^ ]+) (.*)'
+        self.regex = '^' + mate.conf['nick'] + ': say ([^ ]+) (.*)'
 
     @admins_only
     def run(self, mate, nick, msg):

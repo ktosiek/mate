@@ -2,7 +2,7 @@
 __module_class_names__ = ["Title"]
 
 from mate import MateModule, run_per_minute, run_in_background, noop
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import re
 import htmllib
 
@@ -15,7 +15,7 @@ def unescape(s):
 class Title(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = u'(https?://((([a-zA-Z0-9]+\.)+[a-zA-Z]{2,3}(:[0-9]+)?)|([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+))(/[^ ]*)*)'
+        self.regex = '(https?://((([a-zA-Z0-9]+\.)+[a-zA-Z]{2,3}(:[0-9]+)?)|([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+))(/[^ ]*)*)'
         self.conf['threadable'] = True
         self.conf['thread_timeout'] = 10.0
 
@@ -34,7 +34,7 @@ class Title(MateModule):
 
     @run_in_background(10.0)
     def check_title(self, url, mate):
-        f = urllib2.urlopen( url, None, 8.0 )
+        f = urllib.request.urlopen( url, None, 8.0 )
         buf = f.read(4096)
         encoding = 'utf8'
         try:

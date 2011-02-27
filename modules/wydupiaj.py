@@ -5,12 +5,12 @@ from mate import MateModule, run_per_minute, noop
 import random
 
 words_wydupiaj = [ 'wydupiaj', 'wypierdalaj', 'spierdalaj' ]
-words_jebajsie = [ 'jebaj sie', u'jebaj się' ]
+words_jebajsie = [ 'jebaj sie', 'jebaj się' ]
 
 class Wydupiaj(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = u'(?i)((' + '|'.join(words_wydupiaj + words_jebajsie) + ') *)(' + mate.conf['nick'] + ')([!?]*)$'
+        self.regex = '(?i)((' + '|'.join(words_wydupiaj + words_jebajsie) + ') *)(' + mate.conf['nick'] + ')([!?]*)$'
 
     def run(self, mate, nick, msg):
         if mate.match[1] in words_wydupiaj:

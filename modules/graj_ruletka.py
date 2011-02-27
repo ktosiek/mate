@@ -6,7 +6,7 @@ from mate import MateModule
 class GraczRuletki(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = u'(?i)(' + mate.conf['nick'] + ': teraz ty([!]*))|(^\.krec)$'
+        self.regex = '(?i)(' + mate.conf['nick'] + ': teraz ty([!]*))|(^\.krec)$'
         self.ready = False
 
     def run(self, mate, nick, msg):

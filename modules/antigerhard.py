@@ -16,7 +16,7 @@ __module_config__ = { 'combos': (['gerh', 'gerhard', 'schr', 'schroeder'],
 class AntiGerhard(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = u'.*'
+        self.regex = '.*'
 
         if self.conf['anycombo']:
             self.anycombo_msgs_so_far = 0

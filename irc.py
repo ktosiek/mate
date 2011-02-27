@@ -6,6 +6,7 @@ import asynchat
 import socket
 import ssl
 import re
+from functools import reduce
 
 log = logging.getLogger('IRC')
 
@@ -97,14 +98,14 @@ class IRC(asynchat.async_chat):
         self.ibuffer = []
 
     def unhandled_reply_warning(self, prefix, command, params):
-            log.debug( 'unhandled:' + unicode(prefix) + ' ' + unicode(command) + ' ' + unicode(params) )
+            log.debug( 'unhandled:' + str(prefix) + ' ' + str(command) + ' ' + str(params) )
 
     def msg(self, chan, msg):
         self.cmd(['PRIVMSG', chan, msg])
 
     def cmd(self, msg):
-        message = ' '.join( list(map(lambda s: unicode(s).replace(' ',''), msg[:-1]))
-                            + [u':' + unicode(msg[-1])] )
+        message = ' '.join( list(map(lambda s: str(s).replace(' ',''), msg[:-1]))
+                            + [':' + str(msg[-1])] )
 
         log.debug('%s', message)
 

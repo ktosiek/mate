@@ -19,7 +19,7 @@ class ClassWrapper(object):
     def __str__(self):
         return "Wrapped: " + str(self.myobj)
     def __unicode__(self):
-        return u"Wrapped: " + unicode(self.myobj)
+        return "Wrapped: " + str(self.myobj)
     def __getattr__(self, attr):
         return getattr(self.myobj, attr)
 
@@ -29,7 +29,7 @@ def noop(*args,**kwargs):
 def run_per_minute(max_runs_per_m, run_if_too_often):
     def decorate(f):
         def run(*args,**kwargs):
-            if run.__last_minute == long(time.time())/60:
+            if run.__last_minute == int(time.time())/60:
                 run.__runs_last_minute += 1
                 if max_runs_per_m >= run.__runs_last_minute:
                     return f(*args, **kwargs)
@@ -37,7 +37,7 @@ def run_per_minute(max_runs_per_m, run_if_too_often):
                     return run_if_too_often(*args,**kwargs)
             else:
                 run.__runs_last_minute = 0
-                run.__last_minute = long(time.time())/60
+                run.__last_minute = int(time.time())/60
                 return f(*args, **kwargs)
         run.__last_minute = time.time()
         run.__runs_last_minute = 0
