@@ -129,24 +129,25 @@ class Mate(object):
 
         log.info( '%s|< %s>%s', channel, nick, msg)
         for m in self.modules:
-            all_matches = m[1].findall( params[-1] )
-            if len(all_matches) > 0:
-                try:
-                    mate.match = all_matches[0]
-                    mate.all_matches = all_matches
+            for msg in [ msg, ''.join(reversed(msg)) ]:
+                all_matches = m[1].findall( msg )
+                if len(all_matches) > 0:
+                    try:
+                        mate.match = all_matches[0]
+                        mate.all_matches = all_matches
 
-                    log.debug( '%s: %s', m[2].__class__.__name__, all_matches )
-                    
-                    if m[2].conf['threadable']:
-                        run_in_background( m[2].conf['thread_timeout'] )(m[2].run)( mate, nick, msg )
-                    else:
-                        m[2].run( mate, nick, msg )
-                except BaseException as e:
-                    self.gen_say_func( params[0] )( '%s:%s: %s' % \
-                                                        (m[0],
-                                                         m[2].__class__.__name__,
-                                                         str(e).replace('\n', '|')) )
-                    log.debug( 'Exception: ', exc_info=1 )
+                        log.debug( '%s: %s', m[2].__class__.__name__, all_matches )
+                        
+                        if m[2].conf['threadable']:
+                            run_in_background( m[2].conf['thread_timeout'] )(m[2].run)( mate, nick, msg )
+                        else:
+                            m[2].run( mate, nick, msg )
+                    except BaseException as e:
+                        self.gen_say_func( channel )( '%s:%s: %s' % \
+                                                            (m[0],
+                                                             m[2].__class__.__name__,
+                                                             str(e).replace('\n', '|')) )
+                        log.debug( 'Exception: ', exc_info=1 )
 
     def irc_kick_handler(self, irc, prefix, command, params):
         if self.conf['autorejoin']:

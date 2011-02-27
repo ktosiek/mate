@@ -15,7 +15,7 @@ def unescape(s):
 class Title(MateModule):
     def __init__(self, mate, config):
         MateModule.__init__(self, mate, config)
-        self.regex = u'(https?://([a-zA-Z0-9]+\.)+[a-zA-Z]{2,3}(:[0-9]+)?(/[^ ]*)*)'
+        self.regex = u'(https?://((([a-zA-Z0-9]+\.)+[a-zA-Z]{2,3}(:[0-9]+)?)|([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+))(/[^ ]*)*)'
         self.conf['threadable'] = True
         self.conf['thread_timeout'] = 10.0
 
@@ -24,6 +24,8 @@ class Title(MateModule):
         threads = []
         for url in [ m[0] for m in mate.all_matches ]:
             #threads += self.check_title( url, mate )
+            if re.match('^https?://(192\.168\.[0-9]+\.[0-9]+|10\.0\.[0-9]+\.[0-9]+|127\.0\.0\.[0-9]+)', url):
+                return
             self.check_title( url, mate )
 
 #        for t in threads:
@@ -34,15 +36,15 @@ class Title(MateModule):
     def check_title(self, url, mate):
         f = urllib2.urlopen( url, None, 8.0 )
         buf = f.read(4096)
+        encoding = 'utf8'
         try:
-            encoding = 'utf8'
             encoding = re.findall( '<meta http-equiv="Content-Type" content="text/html; charset=([a-zA-Z0-9-]*)">',
-                                   buf )[0].lower()
+                                   buf.decode('ascii', 'replace') )[0].lower()
             if encoding == 'utf-8':
                 encoding = 'utf8'
-            buf = buf.decode( encoding )
         except (UnicodeDecodeError, IndexError):
-            buf = buf.decode('ascii', 'replace')
+            pass
+        buf = buf.decode(encoding, 'replace')
         title = re.findall('(?mi)<title>(.*)</title>', buf.replace('\n','').replace('\r',''))
         if len(title) > 0:
             mate.say( url + '  => ' + unescape(title[0]) )

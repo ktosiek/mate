@@ -92,7 +92,7 @@ class IRC(asynchat.async_chat):
 
             return (prefix, command, params)
 
-        (prefix, command, params) = irc_split(''.join(self.ibuffer).decode(self.encoding))
+        (prefix, command, params) = irc_split(''.join(self.ibuffer).decode(self.encoding, 'replace'))
         self.handlers.get( command, IRC.unhandled_reply_warning)(self, prefix, command, params)
         self.ibuffer = []
 
