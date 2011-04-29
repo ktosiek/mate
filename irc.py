@@ -1,14 +1,17 @@
-from future_builtins import map, filter
-
 import logging
 
 import asynchat
 import socket
 import ssl
 import re
+import time
 from functools import reduce
+from threading import Timer
 
 log = logging.getLogger('IRC')
+
+# in seconds
+PING_TIME = 5
 
 class IRC(asynchat.async_chat):
     reply_names = { '001': 'RPL_WELCOME',
@@ -48,6 +51,7 @@ class IRC(asynchat.async_chat):
                     '366': 'RPL_ENDOFNAMES',
                     #    "<channel> :End of NAMES list"
 
+                    '401': 'RPL_NOTICE',
                     }
 
     def __init__(self, server, port, nick, realname, password=None, use_ssl=False, encoding='utf8'):
@@ -61,10 +65,11 @@ class IRC(asynchat.async_chat):
 
         asynchat.async_chat.__init__(self, sock=sock )
 
+        self.server = server
         self.nick = nick
         self.realname = realname
         self.ibuffer = []
-        self.set_terminator("\r\n")
+        self.set_terminator(b"\r\n")
         self.handlers = {}
 
         if password != None:
@@ -73,12 +78,30 @@ class IRC(asynchat.async_chat):
         self.cmd(['USER', self.nick, 0, '*', self.realname])
 
         self.handlers['PING'] = IRC.ping_handler
+        self.ping_timer = Timer( 2*PING_TIME, self.ping_timer_handler )
+        self.ping_timer.start()
+        self.last_ping = None
+        self.handlers['PONG'] = IRC.pong_handler
+
+    def ping_timer_handler(self):
+        if self.last_ping: # server nie odpowiedział na ostatni ping
+            self.discard_buffers() # dla pewności :-)
+            self.close_when_done()
+            self.close()
+        else:
+            self.cmd(['PING', self.server])
+            self.ping_timer = Timer( PING_TIME, self.ping_timer_handler )
+            self.ping_timer.start()
+            self.last_ping = time.time()
 
     def collect_incoming_data(self, data):
         self.ibuffer.append(data)
 
     def ping_handler(self, prefix, command, params):
         self.cmd(['PONG'] + params)
+
+    def pong_handler(self, prefix, command, params):
+        self.last_ping = None
 
     def found_terminator(self):
         def irc_split(s):
@@ -93,7 +116,7 @@ class IRC(asynchat.async_chat):
 
             return (prefix, command, params)
 
-        (prefix, command, params) = irc_split(''.join(self.ibuffer).decode(self.encoding, 'replace'))
+        (prefix, command, params) = irc_split(b''.join(self.ibuffer).decode(self.encoding, 'replace'))
         self.handlers.get( command, IRC.unhandled_reply_warning)(self, prefix, command, params)
         self.ibuffer = []
 
@@ -105,7 +128,7 @@ class IRC(asynchat.async_chat):
 
     def cmd(self, msg):
         message = ' '.join( list(map(lambda s: str(s).replace(' ',''), msg[:-1]))
-                            + [':' + str(msg[-1])] )
+                            + [(':' if ' ' in str(msg[-1]) else '') + str(msg[-1])] )
 
         log.debug('%s', message)
 

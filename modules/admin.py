@@ -8,6 +8,9 @@ __module_class_names__ = ["Reload", "IrcCmd", "JoinPart", "Say"]
 __module_config__ = { 'admins': (['tomekk'],
                                  list,
                                  """ List of administrators """),
+                      'nickserv': (True,
+                                   bool,
+                                   """ If nickserv should be asked about nick status """),
                       }
 
 def admins_only(f):

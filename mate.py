@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from future_builtins import map, filter
-
 import logging
 import time
 import irc
@@ -8,6 +6,7 @@ import pkgutil
 import re
 import asyncore
 import traceback
+import socket # dla socket.error
 from threading import Timer
 from threading2 import Thread
 
@@ -95,7 +94,11 @@ class MateConfigException(Exception):
 class Mate(object):
     def __init__(self, config):
         self.set_config( config )
+        self.modules = [] # lista krotek (nazwa_zestawu_modułów, skompilowany regexp, moduł)
+        self.load_modules()
 
+    def connect(self):
+        log.info('Connecting to %(server)s:%(port)s as %(nick)s (%(realname)s)' % self.conf)
         self.irc = irc.IRC(self.conf['server'],
                            self.conf['port'],
                            self.conf['nick'],
@@ -106,8 +109,7 @@ class Mate(object):
 
         self.irc.handlers['PRIVMSG'] = self.irc_privmsg_handler
         self.irc.handlers['KICK'] = self.irc_kick_handler
-        self.modules = [] # lista krotek (nazwa_zestawu_modułów, skompilowany regexp, moduł)
-        self.load_modules()
+        self.irc.handlers['NOTICE'] = self.irc_notice_handler
 
     def gen_say_func( self, room ):
         def say( msg ):
@@ -118,6 +120,11 @@ class Mate(object):
         def reply( msg ):
             self.msg( room, nick + ': ' + msg )
         return reply
+
+    def irc_notice_handler(self, irc, prefix, command, params):
+        for m in self.modules:
+            if hasattr(m, 'notice_handler'):
+                m.notice_handler(params)
 
     def irc_privmsg_handler(self, irc, prefix, command, params):
         nick = prefix.split('!')[0]
@@ -158,9 +165,17 @@ class Mate(object):
         self.irc.msg(room, msg)
 
     def main(self):
-        for chan in self.conf['channels']:
-            self.irc.cmd(['JOIN', chan])
-        asyncore.loop()
+        while True: # asyncore skończy się razem z zerwaniem połączenia
+            try:
+                self.connect()
+                for chan in self.conf['channels']:
+                    self.irc.cmd(['JOIN', chan])
+                asyncore.loop()
+            except socket.error as exc:
+                log.error('Problem connecting: %(errno)s: %(strerror)s' % {
+                    'errno': exc.errno,
+                    'strerror': exc.strerror, } )
+            time.sleep(4)
 
     def load_modules(self):
         """Loads modules from module_paths"""
@@ -169,7 +184,7 @@ class Mate(object):
                 try:
                     self.load_module_with_importer(importer, name)
                 except BaseException as e:
-                    log.error( 'Can\'t load %s', name, e )
+                    log.error( 'Can\'t load %s', name )
                     log.debug( 'Exception:', exc_info=1 )
 
     def load_module_with_importer(self, importer, pack_name, load_modules=None):

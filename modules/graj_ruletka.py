@@ -15,4 +15,6 @@ class GraczRuletki(MateModule):
         elif self.ready and not '.krec' in mate.match:
             mate.say( '.strzal' )
             self.ready = False
+        elif not self.ready and not '.krec' in mate.match:
+            mate.reply( 'a takiego wała' )
 
